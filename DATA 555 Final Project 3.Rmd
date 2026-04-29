@@ -1,0 +1,210 @@
+---
+title: "Skilled Birth Attendance in Katsina, Nigeria"
+author: "Toni Idowu"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: scroll
+    source_code: "https://github.com/toniidowu/skilled-birth-attendance-dashboard"
+---
+<style>
+.chart-title {
+  font-size: 20px;
+}
+</style>
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+Dashboard
+=====================================
+
+Guide & Glossary {.sidebar}
+-------------------------------------
+
+### How to Use This Dashboard
+
+Hover over chart elements to see details. Use the dropdown menu to explore skilled birth attendance rates by characteristic.
+
+### Key Terms
+
+**Skilled birth attendance:** % of respondents with the selected characteristic who used a skilled birth attendant (doctor, nurse, or midwife) during delivery.
+
+**Perceived mortality:** Whether a respondent believed that maternal/infants deaths occur in their community.
+
+Column 
+-------------------------------------
+
+### Which Area Did the Study Population Come From?
+
+```{r pie-chart, echo=FALSE}
+library(plotly)
+library(dplyr)
+
+# Create data
+lga_data <- data.frame(
+  LGA = c("Charanchi", "Katsina", "Mani"),
+  Respondents = c(430, 414, 412),
+  Males = c(390, 381, 404),
+  Females = c(40, 33, 8)
+)
+
+# Compute percentages
+lga_data <- lga_data %>%
+  mutate(
+    Percent = round(Respondents / sum(Respondents) * 100, 1),
+    Label = paste0(Percent, "%")
+  )
+
+# Pastel, colorblind-friendly colors (blue, green, orange)
+colors <- c("#A6CEE3", "#B2DF8A", "#FDBF6F")
+
+# Create pie chart
+fig1 <- plot_ly(
+  lga_data,
+  labels = ~LGA,
+  values = ~Respondents,
+  type = 'pie',
+  text = ~paste0(LGA, "\n", round(Percent), "%"),
+  textposition = 'inside',
+  textfont = list(size = 16, color = "black"),
+  textinfo = 'text',
+  marker = list(colors = colors),
+  showlegend = FALSE,
+  hovertemplate = ~paste0(
+    "Respondents: ", Respondents, "<br>",
+    "Males: ", Males, " | Females: ", Females,
+    "<extra></extra>"
+  ),
+  hole = 0
+) %>%
+  layout(
+    title = NULL
+  )
+
+fig1
+```
+
+
+Column 
+-------------------------------------
+
+### Skilled Birth Attendance (SBA) by Key Characteristics
+
+*Choose a characteristic* 
+
+```{r bar-chart, echo=FALSE}
+# SBA data by characteristic
+sba_data <- data.frame(
+  Characteristic = c(
+    rep("Education level", 5),
+    rep("Occupation", 4),
+    rep("Perceived Maternal/Child Mortality", 2),
+    rep("Local Government Area", 3),
+    rep("Community Health Worker Engagement", 2)
+  ),
+  Level = c(
+    "Quranic", "Primary", "Secondary", "Diploma/NCE", "Degree+",
+    "Business", "Civil Servant", "Farmer", "Other",
+    "Yes", "No",
+    "Charanchi", "Katsina", "Mani",
+    "Yes", "No"
+  ),
+  SBA_Percent = c(
+    52, 51, 71, 79, 93,    # Education level %
+    71, 85, 50, 57,        # Occupation %
+    64, 75,                # Perceived Mortality %
+    56, 86, 55,            # LGA %
+    67, 64                 # CHW Engagement %
+  ),
+  No_SBA = c(
+    48, 49, 29, 21, 7,
+    29, 15, 50, 43,
+    36, 25,
+    44, 14, 45,
+    33, 36
+  )
+)
+
+sba_data$Level <- factor(sba_data$Level, levels = c(
+  "Quranic", "Primary", "Secondary", "Diploma/NCE", "Degree+",
+  "Business", "Civil Servant", "Farmer", "Other",
+  "Yes", "No",
+  "Charanchi", "Katsina", "Mani"
+))
+
+# Pastel color for all bars
+bar_color <- "#B2DF8A"
+
+# Build dropdown buttons
+buttons <- lapply(unique(sba_data$Characteristic), function(char) {
+  sub_data <- sba_data %>% filter(Characteristic == char)
+  list(
+    method = "restyle",
+    args = list(
+      list(
+        x = list(sub_data$Level),
+        y = list(sub_data$SBA_Percent),
+        text = list(sub_data$No_SBA)
+      )
+    ),
+    label = char
+  )
+})
+
+# Create bar chart
+fig2 <- plot_ly(
+  sba_data %>% filter(Characteristic == "Education level"),
+  x = ~Level,
+  y = ~SBA_Percent,
+  type = 'bar',
+  text = ~No_SBA,
+  textposition = 'none',
+  marker = list(color = bar_color),
+  hovertemplate = "Used SBA: %{y}%<br>Did not use SBA: %{text}%<extra></extra>"
+) %>%
+  layout(
+    title = NULL,
+    margin = list(b = 100),
+    xaxis = list(title = "Characteristic"),
+    yaxis = list(
+      title = "Skilled Birth Attendance (%)",
+      range = list(0, 100)
+    ),
+    updatemenus = list(
+      list(
+        y = 1.3,
+        x = 0,
+        xanchor = 'left',
+        type = 'dropdown',
+        active = 0,
+        buttons = buttons,
+        pad = list(t = 10),
+        showactive = TRUE,
+        bgcolor = "#f0f0f0",
+        bordercolor = "#cccccc"
+      )
+    )
+      )
+
+fig2
+```
+
+###
+
+**Why This Matters:**
+Access to skilled birth attendance is critical for reducing maternal and newborn mortality, yet uptake varies widely across communities in northern Nigeria. This dashboard turns raw survey data into actionable insights, helping program managers and health officials identify gaps, target populations in need, and design more effective maternal health interventions in Katsina State.
+
+About the Data
+=====================================
+
+**Data Source**
+
+This dashboard uses data from the CARE Nigeria EnRiCH baseline cross-sectional Survey, a confidential dataset collected from 1,264 adult household members across three local government areas (Charanchi, Katsina, and Mani) in Katsina State, Nigeria prior to program launch. Data was collected between May and June 2025 via household questionnaires, capturing key variables including skilled birth attendance, education level, occupation, perceived mortality, local government area, and community health worker engagement. **Note:** Missing data were observed for local government area (n=8), education level (n=4), and occupation (n=2).
+
+**Statistical Analysis**
+
+Chi-square tests assessed associations between respondent characteristics 
+and skilled birth attendance. Education level, occupation, local government area, and perceived mortality were significantly associated with skilled birth attendance 
+(p ≤ 0.001); community health worker engagement was not significant (p = 0.32).
