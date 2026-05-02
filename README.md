@@ -10,7 +10,7 @@ Access to skilled birth attendance is critical for reducing maternal and newborn
 
 ## Contents of the Report
 
-Pie Chart: Geographic distribution of study respondents across three local government areas (Charanchi, Katsina, and Mani).
+Pie Chart: Geographic and gender distribution of study respondents across three local government areas (Charanchi, Katsina, and Mani).
 
 Bar Chart: Skilled birth attendance rates by key characteristics (education level, occupation, local government area, perceived mortality, and community health worker engagement).
 
